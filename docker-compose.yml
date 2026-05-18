@@ -1,0 +1,81 @@
+# Docker Compose configuration for SyncFlow
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: syncflow
+      POSTGRES_USER: syncflow
+      POSTGRES_PASSWORD: syncflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U syncflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and channels
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Django Web Application
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate &&
+            gunicorn syncflow.asgi:application --bind 0.0.0.0:8000 --workers 4"
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgres://syncflow:syncflow@db:5432/syncflow
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - DEBUG=0
+      - DJANGO_SETTINGS_MODULE=syncflow.settings.prod
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Celery Worker for background tasks
+  celery_worker:
+    build: .
+    command: celery -A syncflow worker -l info
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgres://syncflow:syncflow@db:5432/syncflow
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - DJANGO_SETTINGS_MODULE=syncflow.settings.prod
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:

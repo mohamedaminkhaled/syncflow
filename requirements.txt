@@ -1,0 +1,48 @@
+# Django Framework
+Django>=5.0,<6.0
+
+# Database
+psycopg2-binary>=2.9,<3.0
+
+# Django REST Framework
+djangorestframework>=3.14,<4.0
+djangorestframework-simplejwt>=5.3,<6.0
+django-filter>=24.0,<25.0
+drf-spectacular>=0.27,<1.0
+
+# GraphQL
+graphene>=3.3,<4.0
+graphene-django>=3.2,<4.0
+graphql-core>=3.2,<4.0
+
+# Django Channels
+channels>=4.0,<5.0
+channels-redis>=4.2,<5.0
+daphne>=4.1,<5.0
+
+# Caching
+django-redis>=5.4,<6.0
+
+# Celery
+celery>=5.3,<6.0
+django-celery-beat>=2.5,<3.0
+
+# Frontend helpers
+whitenoise>=6.6,<7.0
+django-cors-headers>=4.3,<5.0
+
+# Utilities
+python-dotenv>=1.0,<2.0
+Pillow>=10.2,<11.0
+redis>=5.0,<6.0
+
+# Development
+flake8>=7.0,<8.0
+black>=24.0,<25.0
+isort>=5.13,<6.0
+
+# Testing
+pytest>=8.0,<9.0
+pytest-django>=4.8,<5.0
+pytest-cov>=4.1,<5.0
+channels-testing>=0.4.0
