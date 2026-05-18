@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div align="center">
 
 # SyncFlow
@@ -835,3 +836,7 @@ GitHub issues. Security issues to `security@syncflow.example` (PGP key in `SECUR
 [Roadmap](./docs/ROADMAP.md) · [Architecture](./docs/architecture/) · [ADRs](./docs/adr/) · [Eval Reports](./docs/evals.md)
 
 </div>
+=======
+# syncflow
+SyncFlow is a multi-tenant, AI-native collaborative project management platform — think Trello or Jira, but with first-class AI agents that take real actions inside your workspace: triaging bugs, breaking down epics, drafting standups, summarizing long discussions, and surfacing risks before they become blockers.
+>>>>>>> 51bc4a4fb3617fa4d387bef5e630aea7bd9d69c9
