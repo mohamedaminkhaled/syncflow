@@ -32,4 +32,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # Logging
 LOGGING['loggers']['django']['level'] = 'DEBUG'
-LOGGING['loggers']['apps']['level'] = 'DEBUG'
+LOGGING['loggers']['apps'] = {
+    'handlers': ['console'],
+    'level': 'DEBUG',
+    'propagate': False,
+}
