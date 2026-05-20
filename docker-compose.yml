@@ -39,7 +39,7 @@ services:
     build: .
     command: >
       sh -c "python manage.py migrate &&
-            gunicorn syncflow.asgi:application --bind 0.0.0.0:8000 --workers 4"
+            gunicorn syncflow.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4"
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
@@ -48,11 +48,21 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgres://syncflow:syncflow@db:5432/syncflow
+      - POSTGRES_DB=syncflow
+      - POSTGRES_USER=syncflow
+      - POSTGRES_PASSWORD=syncflow
+      - DB_HOST=db
+      - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - SECRET_KEY=dev-secret-key-change-in-production
       - DEBUG=0
       - DJANGO_SETTINGS_MODULE=syncflow.settings.prod
       - ALLOWED_HOSTS=localhost,127.0.0.1
+      - SECURE_SSL_REDIRECT=0
+      - SESSION_COOKIE_SECURE=0
+      - CSRF_COOKIE_SECURE=0
     depends_on:
       db:
         condition: service_healthy
@@ -67,7 +77,14 @@ services:
       - .:/app
     environment:
       - DATABASE_URL=postgres://syncflow:syncflow@db:5432/syncflow
+      - POSTGRES_DB=syncflow
+      - POSTGRES_USER=syncflow
+      - POSTGRES_PASSWORD=syncflow
+      - DB_HOST=db
+      - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - SECRET_KEY=dev-secret-key-change-in-production
       - DJANGO_SETTINGS_MODULE=syncflow.settings.prod
     depends_on:

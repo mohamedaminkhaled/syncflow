@@ -1,6 +1,6 @@
 # Dockerfile for SyncFlow Django Application
 
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
@@ -19,7 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
@@ -34,4 +35,4 @@ RUN python manage.py collectstatic --noinput --settings=syncflow.settings.prod |
 EXPOSE 8000
 
 # Run the application
-CMD ["gunicorn", "syncflow.asgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
+CMD ["gunicorn", "syncflow.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--workers", "4"]

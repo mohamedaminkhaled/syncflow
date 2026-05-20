@@ -6,10 +6,13 @@ from .base import *
 DEBUG = False
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 
-# Secure cookie settings
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
+def _env_bool(name, default):
+    return os.environ.get(name, str(default)).lower() in ('1', 'true', 'yes', 'on')
+
+# Secure cookie settings (disable when serving over plain HTTP, e.g. local docker)
+SESSION_COOKIE_SECURE = _env_bool('SESSION_COOKIE_SECURE', True)
+CSRF_COOKIE_SECURE = _env_bool('CSRF_COOKIE_SECURE', True)
+SECURE_SSL_REDIRECT = _env_bool('SECURE_SSL_REDIRECT', True)
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
@@ -48,4 +51,8 @@ CACHES = {
 
 # Logging
 LOGGING['loggers']['django']['level'] = 'WARNING'
-LOGGING['loggers']['apps']['level'] = 'INFO'
+LOGGING['loggers']['apps'] = {
+    'handlers': ['console'],
+    'level': 'INFO',
+    'propagate': False,
+}

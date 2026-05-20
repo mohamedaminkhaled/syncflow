@@ -69,7 +69,7 @@ class Task(models.Model):
         ordering = ['position']
         indexes = [
             models.Index(fields=['column', 'position']),
-            models.Index(fields=['assignees', 'status']),
+            models.Index(fields=['status']),
             models.Index(fields=['due_date']),
             models.Index(fields=['status', '-created_at']),
         ]

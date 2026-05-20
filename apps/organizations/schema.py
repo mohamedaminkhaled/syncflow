@@ -43,8 +43,8 @@ class Query(graphene.ObjectType):
         if not user.is_authenticated:
             return None
         return Organization.objects.filter(
-,
-            id=            members=userid
+            id=id,
+            members=user,
         ).first()
     
     def resolve_organizations(self, info):
