@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}LLM Playground — SyncFlow{% endblock %}
+
+{% block head_extra %}
+<style>
+    .pg-wrap { padding: 3rem 0 2rem; }
+    .pg-head { text-align: center; margin-bottom: 2rem; }
+    .pg-head h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; margin: 0.6rem 0 0.3rem;
+        background: linear-gradient(120deg,#fff,#9fb4ff,#7ee7ff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .pg-head p { color: var(--muted); margin: 0; }
+    .pg-grid { display: grid; grid-template-columns: 360px 1fr; gap: 1.5rem; align-items: start; }
+    @media (max-width: 880px) { .pg-grid { grid-template-columns: 1fr; } }
+
+    .field { margin-bottom: 1.1rem; }
+    .field label { display:block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .control, textarea, select {
+        width: 100%; padding: 0.7rem 0.85rem; border-radius: 12px; font-size: 0.95rem; font-family: inherit;
+        background: rgba(8,10,16,0.7); color: var(--text); border: 1px solid var(--panel-border); outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .control:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.25); }
+    textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+    .switch { display: flex; align-items: center; gap: 0.6rem; color: var(--muted); font-size: 0.9rem; cursor: pointer; user-select: none; }
+    .switch input { width: 18px; height: 18px; accent-color: var(--accent); }
+    .side { padding: 1.5rem; }
+    .send-row { display: flex; gap: 0.8rem; align-items: center; margin-top: 0.5rem; }
+
+    .out { padding: 1.5rem; min-height: 320px; display: flex; flex-direction: column; }
+    .out-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .out-head .who { font-size: 0.85rem; color: var(--muted); }
+    .answer { white-space: pre-wrap; word-wrap: break-word; flex: 1; font-size: 0.98rem; line-height: 1.65; }
+    .placeholder { color: var(--muted); display:grid; place-items:center; flex:1; text-align:center; }
+
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: 0.8rem; margin-top: 1.4rem; }
+    .metric { padding: 0.85rem 1rem; border-radius: 12px; background: rgba(8,10,16,0.55); border: 1px solid var(--panel-border); }
+    .metric .k { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .metric .v { font-size: 1.1rem; font-weight: 700; margin-top: 0.2rem; }
+    .metric.cost .v { color: var(--good); }
+    .hidden { display: none; }
+    .error { color: var(--danger); background: rgba(251,113,133,0.08); border:1px solid rgba(251,113,133,0.3); padding: 0.9rem 1rem; border-radius: 12px; }
+    .dots::after { content:''; animation: dots 1.2s steps(4,end) infinite; }
+    @keyframes dots { 0%{content:'';} 25%{content:'.';} 50%{content:'..';} 75%{content:'...';} }
+    .cursor { display:inline-block; width:8px; background: var(--accent-2); margin-left:2px; animation: blink 1s steps(2) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.6rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pg-wrap container">
+    <div class="pg-head">
+        <span class="badge">✦ Multi-provider LLM engine</span>
+        <h1>LLM Playground</h1>
+        <p>Send a prompt to any provider and watch tokens, cost &amp; latency in real time.</p>
+    </div>
+
+    <div class="pg-grid">
+        <!-- Controls -->
+        <form id="pg-form" class="panel side">
+            <div class="field">
+                <label for="provider">Provider</label>
+                <select id="provider" class="control"></select>
+            </div>
+            <div class="field">
+                <label for="model">Model</label>
+                <select id="model" class="control"></select>
+            </div>
+            <div class="field">
+                <label for="system">System prompt (optional)</label>
+                <textarea id="system" placeholder="You are a helpful assistant." style="min-height:70px"></textarea>
+            </div>
+            <div class="field">
+                <label for="prompt">Prompt</label>
+                <textarea id="prompt" placeholder="What is RAG?"></textarea>
+            </div>
+            <label class="switch"><input type="checkbox" id="stream" checked> Stream response</label>
+            <div class="send-row">
+                <button type="submit" id="send" class="btn btn-primary">Send ✦</button>
+                <span id="status" class="hint"></span>
+            </div>
+            <p class="hint">Keys come from <code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code>,
+            <code>OPENROUTER_API_KEY</code> on the server.</p>
+        </form>
+
+        <!-- Output -->
+        <div class="panel out">
+            <div class="out-head">
+                <span class="who" id="out-who">Response</span>
+            </div>
+            <div id="placeholder" class="placeholder">Your response will appear here ✦</div>
+            <div id="answer" class="answer hidden"></div>
+            <div id="error" class="error hidden"></div>
+            <div id="metrics" class="metrics hidden">
+                <div class="metric"><div class="k">Input tokens</div><div class="v" id="m-in">—</div></div>
+                <div class="metric"><div class="k">Output tokens</div><div class="v" id="m-out">—</div></div>
+                <div class="metric cost"><div class="k">Cost (USD)</div><div class="v" id="m-cost">—</div></div>
+                <div class="metric"><div class="k">Latency</div><div class="v" id="m-lat">—</div></div>
+                <div class="metric"><div class="k">Finish</div><div class="v" id="m-finish">—</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block body_extra %}
+{% csrf_token %}
+<script>
+    const CATALOG = {{ catalog_json|safe }};
+    const CSRF = document.querySelector('input[name=csrfmiddlewaretoken]').value;
+
+    const providerSel = document.getElementById('provider');
+    const modelSel = document.getElementById('model');
+    const form = document.getElementById('pg-form');
+    const sendBtn = document.getElementById('send');
+    const statusEl = document.getElementById('status');
+    const placeholder = document.getElementById('placeholder');
+    const answerEl = document.getElementById('answer');
+    const errorEl = document.getElementById('error');
+    const metricsEl = document.getElementById('metrics');
+    const outWho = document.getElementById('out-who');
+
+    // Populate providers
+    Object.keys(CATALOG).forEach(p => {
+        const o = document.createElement('option'); o.value = p; o.textContent = p; providerSel.appendChild(o);
+    });
+    function fillModels() {
+        modelSel.innerHTML = '';
+        (CATALOG[providerSel.value] || []).forEach(m => {
+            const o = document.createElement('option'); o.value = m; o.textContent = m; modelSel.appendChild(o);
+        });
+    }
+    providerSel.addEventListener('change', fillModels);
+    fillModels();
+
+    function setBusy(busy, label) {
+        sendBtn.disabled = busy;
+        statusEl.innerHTML = busy ? `<span class="dots">${label || 'Thinking'}</span>` : '';
+    }
+    function showError(msg) {
+        placeholder.classList.add('hidden');
+        answerEl.classList.add('hidden');
+        metricsEl.classList.add('hidden');
+        errorEl.textContent = msg;
+        errorEl.classList.remove('hidden');
+    }
+    function resetOut() {
+        errorEl.classList.add('hidden');
+        placeholder.classList.add('hidden');
+        answerEl.classList.remove('hidden');
+        answerEl.textContent = '';
+        metricsEl.classList.add('hidden');
+    }
+    function renderMetrics(m) {
+        document.getElementById('m-in').textContent = m.input_tokens.toLocaleString();
+        document.getElementById('m-out').textContent = m.output_tokens.toLocaleString();
+        document.getElementById('m-cost').textContent = '$' + m.cost_usd;
+        document.getElementById('m-lat').textContent = m.latency_ms + ' ms';
+        document.getElementById('m-finish').textContent = m.finish_reason;
+        metricsEl.classList.remove('hidden');
+    }
+
+    function payload() {
+        return {
+            provider: providerSel.value,
+            model: modelSel.value,
+            system: document.getElementById('system').value,
+            prompt: document.getElementById('prompt').value,
+        };
+    }
+
+    async function runAsk(body) {
+        const res = await fetch('/api/llm/ask/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) { showError(data.error || 'Request failed'); return; }
+        resetOut();
+        answerEl.textContent = data.text;
+        renderMetrics(data);
+    }
+
+    async function runStream(body) {
+        resetOut();
+        const cursor = document.createElement('span'); cursor.className = 'cursor'; cursor.innerHTML = '&nbsp;';
+        answerEl.appendChild(cursor);
+
+        const res = await fetch('/api/llm/stream/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); showError(d.error || 'Stream failed'); return; }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const events = buffer.split('\n\n');
+            buffer = events.pop();  // keep incomplete tail
+            for (const ev of events) {
+                const typeMatch = ev.match(/^event: (.+)$/m);
+                const dataMatch = ev.match(/^data: (.+)$/m);
+                if (!dataMatch) continue;
+                const type = typeMatch ? typeMatch[1] : 'message';
+                const data = JSON.parse(dataMatch[1]);
+                if (type === 'delta') {
+                    cursor.insertAdjacentText('beforebegin', data.text);
+                } else if (type === 'done') {
+                    renderMetrics(data);
+                } else if (type === 'error') {
+                    showError(data.error);
+                }
+            }
+        }
+        cursor.remove();
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const body = payload();
+        if (!body.prompt.trim()) { showError('Please enter a prompt.'); return; }
+        outWho.textContent = `${body.provider} · ${body.model}`;
+        const streaming = document.getElementById('stream').checked;
+        setBusy(true, streaming ? 'Streaming' : 'Thinking');
+        try {
+            if (streaming) await runStream(body); else await runAsk(body);
+        } catch (err) {
+            showError(String(err));
+        } finally {
+            setBusy(false);
+        }
+    });
+</script>
+{% endblock %}

@@ -63,6 +63,10 @@ services:
       - SECURE_SSL_REDIRECT=0
       - SESSION_COOKIE_SECURE=0
       - CSRF_COOKIE_SECURE=0
+      # LLM provider keys — pulled from your host env or a local .env file.
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy

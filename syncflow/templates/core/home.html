@@ -1,39 +1,66 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SyncFlow</title>
-    <style>
-        body { font-family: -apple-system, system-ui, sans-serif; max-width: 900px; margin: 3rem auto; padding: 0 1.5rem; color: #1f2937; }
-        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
-        .lead { color: #6b7280; font-size: 1.15rem; margin-bottom: 2.5rem; }
-        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
-        .feature { padding: 1.25rem; border: 1px solid #e5e7eb; border-radius: 8px; }
-        .feature h3 { margin: 0 0 0.5rem; font-size: 1.05rem; }
-        .feature p { margin: 0; color: #4b5563; font-size: 0.95rem; }
-        .links { margin-top: 2.5rem; display: flex; gap: 1rem; }
-        .links a { color: #2563eb; text-decoration: none; font-weight: 500; }
-        .links a:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <h1>SyncFlow</h1>
-    <p class="lead">Real-time collaborative project management.</p>
+{% extends "base.html" %}
 
+{% block title %}SyncFlow — Collaborative project management, AI-native{% endblock %}
+
+{% block head_extra %}
+<style>
+    .hero { padding: 6rem 0 4rem; text-align: center; }
+    .hero h1 {
+        font-size: clamp(2.4rem, 6vw, 4.2rem); line-height: 1.05; margin: 1.2rem 0 1rem;
+        font-weight: 800; letter-spacing: -0.03em;
+        background: linear-gradient(120deg, #fff 20%, #b9c0ff 55%, #8be9ff 90%);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero p.lead { color: var(--muted); font-size: 1.2rem; max-width: 620px; margin: 0 auto 2rem; }
+    .hero-cta { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-top: 1rem; }
+    .feature { padding: 1.6rem; transition: transform .2s, border-color .2s; }
+    .feature:hover { transform: translateY(-4px); border-color: rgba(99,102,241,0.5); }
+    .feature .ico {
+        width: 46px; height: 46px; display: grid; place-items: center; font-size: 1.4rem;
+        border-radius: 12px; margin-bottom: 1rem;
+        background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(34,211,238,0.18));
+        border: 1px solid var(--panel-border); color: var(--accent-2);
+    }
+    .feature h3 { margin: 0 0 0.4rem; font-size: 1.05rem; }
+    .feature p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+    .stats { display: flex; gap: 2.5rem; justify-content: center; flex-wrap: wrap; margin: 3.5rem 0 1rem; }
+    .stat .num { font-size: 2rem; font-weight: 800; background: linear-gradient(120deg, var(--accent-2), var(--accent-3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .stat .label { color: var(--muted); font-size: 0.85rem; }
+    .section-title { text-align: center; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+    .section-sub { text-align: center; color: var(--muted); margin-bottom: 2rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero container">
+    <span class="badge">✦ AI-native collaboration platform</span>
+    <h1>Ship faster, together.</h1>
+    <p class="lead">Real-time Kanban, REST &amp; GraphQL APIs, and a multi-provider LLM
+    engine with token + cost tracking — all in one futuristic workspace.</p>
+    <div class="hero-cta">
+        <a href="/playground/" class="btn btn-primary">Try the LLM Playground →</a>
+        <a href="/admin/" class="btn btn-ghost">Open Admin</a>
+    </div>
+
+    <div class="stats">
+        <div class="stat"><div class="num">3</div><div class="label">LLM providers</div></div>
+        <div class="stat"><div class="num">∞</div><div class="label">Real-time boards</div></div>
+        <div class="stat"><div class="num">2</div><div class="label">API styles</div></div>
+    </div>
+</section>
+
+<section class="container">
+    <h2 class="section-title">Built for modern teams</h2>
+    <p class="section-sub">Everything you need to plan, build and ship.</p>
     <div class="features">
         {% for feature in features %}
-        <div class="feature">
+        <div class="panel feature">
+            <div class="ico">{{ feature.icon }}</div>
             <h3>{{ feature.title }}</h3>
             <p>{{ feature.description }}</p>
         </div>
         {% endfor %}
     </div>
-
-    <div class="links">
-        <a href="/admin/">Admin</a>
-        <a href="/graphql/">GraphQL</a>
-        <a href="/dashboard/">Dashboard</a>
-    </div>
-</body>
-</html>
+</section>
+{% endblock %}

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "syncflow"
+version = "0.1.0"
+description = "SyncFlow — collaborative project management with a multi-provider LLM CLI."
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+syncflow = "syncflow.llm.cli:app"
+
+[tool.setuptools.packages.find]
+# Discover the Django project package and all apps, including subpackages.
+include = ["syncflow*", "apps*"]
+
+[tool.setuptools.package-data]
+"syncflow.llm" = ["*.toml"]
+
+[tool.pytest.ini_options]
+# The LLM tests are pure Python and must not require the Django DB.
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra"
