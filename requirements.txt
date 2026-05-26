@@ -1,5 +1,5 @@
 # Django Framework
-Django>=5.0,<6.0
+Django>=6.0.5,<7.0
 
 # Database
 psycopg2-binary>=2.9,<3.0
