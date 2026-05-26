@@ -44,7 +44,7 @@ redis>=5.0,<6.0
 # Development
 flake8>=7.0,<8.0
 black>=24.0,<25.0
-isort>=5.13,<6.0
+isort>=8.0.1,<9.0
 
 # LLM CLI
 anthropic>=0.40,<1.0
